@@ -1,103 +1,320 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // Form state
+  const [locationName, setLocationName] = useState("");
+  const [timezone, setTimezone] = useState("");
+  const [latitude, setLatitude] = useState(12.9840666);
+  const [longitude, setLongitude] = useState(77.7108679);
+  const [country, setCountry] = useState("");
+  const [stateProv, setStateProv] = useState("");
+  const [city, setCity] = useState("");
+  const [address1, setAddress1] = useState("");
+  const [address2, setAddress2] = useState("");
+  const [zip, setZip] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [phoneCode, setPhoneCode] = useState("+855");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [paymentType, setPaymentType] = useState("");
+  const [gstIn, setGstIn] = useState("");
+  const [caNumber, setCaNumber] = useState("");
+  const [reservable, setReservable] = useState(true);
+  const [dsm, setDsm] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Address autofill
+  const [suggestions, setSuggestions] = useState([]);
+  const [debouncedAddress, setDebouncedAddress] = useState("");
+
+  // Debounce address1 input
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedAddress(address1), 500);
+    return () => clearTimeout(handler);
+  }, [address1]);
+
+  // Fetch suggestions when debouncedAddress changes
+  useEffect(() => {
+    if (!debouncedAddress) {
+      setSuggestions([]);
+      return;
+    }
+    fetch(`http://localhost:3001/ocpi/search?key=${encodeURIComponent(debouncedAddress)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Normalize to SuggestionItem[]
+        const items = Array.isArray(data) ? data : data.suggestions || [];
+        // Extract only names for rendering
+        setSuggestions(items.map((item) => item.name));
+      })
+      .catch((err) => {
+        console.error("Search error:", err);
+        setSuggestions([]);
+      });
+  }, [debouncedAddress]);
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Navigation Tabs */}
+      <nav className="flex space-x-3">
+        <button className="px-4 py-1 bg-green-500 text-white rounded-full">
+          Location Management
+        </button>
+        <button className="px-4 py-1 bg-gray-100 text-gray-700 rounded-full">
+          Station Management
+        </button>
+        <button className="px-4 py-1 bg-gray-100 text-gray-700 rounded-full">Asset Settings</button>
+        <button className="px-4 py-1 bg-gray-100 text-gray-700 rounded-full">
+          Firmware Management
+        </button>
+      </nav>
+
+      {/* Map Placeholder */}
+      <div className="relative h-64 bg-white border border-gray-300 rounded">
+        <div className="absolute top-2 left-2 flex flex-col bg-white p-1 rounded shadow">
+          <button className="w-6 h-6 flex items-center justify-center text-gray-800">+</button>
+          <button className="w-6 h-6 flex items-center justify-center text-gray-800 mt-1">−</button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Form */}
+      <form className="space-y-6">
+        <div className="grid grid-cols-7 gap-4">
+          {/* Row 1 */}
+          <div>
+            <label className="block text-sm font-medium">Location Name*</label>
+            <input
+              type="text"
+              value={locationName}
+              onChange={(e) => setLocationName(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Timezone*</label>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Select timezone</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Latitude*</label>
+            <input
+              type="number"
+              value={latitude}
+              onChange={(e) => setLatitude(parseFloat(e.target.value))}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Longitude*</label>
+            <input
+              type="number"
+              value={longitude}
+              onChange={(e) => setLongitude(parseFloat(e.target.value))}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Country*</label>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Select country</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">State/Province*</label>
+            <select
+              value={stateProv}
+              onChange={(e) => setStateProv(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Select state/province</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">City*</label>
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Select city</option>
+            </select>
+          </div>
+
+          {/* Row 2 with autofill */}
+          <div className="relative col-span-2">
+            <label className="block text-sm font-medium">Address Line 1*</label>
+            <input
+              id="address1"
+              type="text"
+              value={address1}
+              onChange={(e) => setAddress1(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+            {suggestions.length > 0 && (
+              <ul className="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto rounded">
+                {suggestions.map((text, idx) => (
+                  <li
+                    key={idx}
+                    className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      setAddress1(text);
+                      setSuggestions([]);
+                    }}
+                  >
+                    {text}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Address Line 2</label>
+            <input
+              type="text"
+              value={address2}
+              onChange={(e) => setAddress2(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Zip/Postal Code*</label>
+            <input
+              type="text"
+              value={zip}
+              onChange={(e) => setZip(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-400">Business Owner</label>
+            <input
+              type="text"
+              value="TotalEnergies Marketing"
+              disabled
+              className="mt-1 block w-full bg-gray-100 border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Contact Email*</label>
+            <input
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div className="flex space-x-2">
+            <div>
+              <label className="block text-sm font-medium">Contact Number</label>
+              <div className="flex">
+                <select
+                  value={phoneCode}
+                  onChange={(e) => setPhoneCode(e.target.value)}
+                  className="mt-1 border border-gray-300 rounded-l px-2 py-1"
+                >
+                  <option>+855</option>
+                </select>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-r px-2 py-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Payment Type*</label>
+              <select
+                value={paymentType}
+                onChange={(e) => setPaymentType(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+              >
+                <option value="">Select payment type</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 3 additional fields */}
+          <div>
+            <label className="block text-sm font-medium">GST IN</label>
+            <input
+              type="text"
+              value={gstIn}
+              onChange={(e) => setGstIn(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">CA Number</label>
+            <input
+              type="text"
+              value={caNumber}
+              onChange={(e) => setCaNumber(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+        </div>
+
+        {/* Toggles and Actions */}
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center">
+            <input
+              id="reservable"
+              type="checkbox"
+              checked={reservable}
+              onChange={() => setReservable((v) => !v)}
+              className="h-5 w-5 text-green-500 border-gray-300 rounded"
+            />
+            <label htmlFor="reservable" className="ml-2 text-sm">
+              Reservable
+            </label>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="dsm"
+              type="checkbox"
+              checked={dsm}
+              onChange={() => setDsm((v) => !v)}
+              className="h-5 w-5 text-green-500 border-gray-300 rounded"
+            />
+            <label htmlFor="dsm" className="ml-2 text-sm">
+              DSM
+            </label>
+          </div>
+
+          <div className="ml-auto space-x-2">
+            <button type="button" className="px-4 py-2 border border-gray-300 rounded">
+              Cancel
+            </button>
+            <button type="submit" className="px-4 py-2 bg-blue-900 text-white rounded">
+              Next
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 }
