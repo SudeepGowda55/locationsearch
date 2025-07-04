@@ -6,8 +6,8 @@ export default function Home() {
   // Form state
   const [locationName, setLocationName] = useState("");
   const [timezone, setTimezone] = useState("");
-  const [latitude, setLatitude] = useState(12.9840666);
-  const [longitude, setLongitude] = useState(77.7108679);
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
   const [country, setCountry] = useState("");
   const [stateProv, setStateProv] = useState("");
   const [city, setCity] = useState("");
@@ -15,7 +15,7 @@ export default function Home() {
   const [address2, setAddress2] = useState("");
   const [zip, setZip] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [phoneCode, setPhoneCode] = useState("+855");
+  const [phoneCode, setPhoneCode] = useState("+63");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentType, setPaymentType] = useState("");
   const [gstIn, setGstIn] = useState("");
@@ -23,8 +23,8 @@ export default function Home() {
   const [reservable, setReservable] = useState(true);
   const [dsm, setDsm] = useState(false);
 
-  // Address autofill
-  const [suggestions, setSuggestions] = useState([]);
+  // Autofill state
+  const [suggestions, setSuggestions] = useState([]); // holds objects with name, addressLine1, etc.
   const [debouncedAddress, setDebouncedAddress] = useState("");
 
   // Debounce address1 input
@@ -46,16 +46,26 @@ export default function Home() {
     )
       .then((res) => res.json())
       .then((data) => {
-        // Normalize to SuggestionItem[]
+        // data might be an array or { suggestions: [...] }
         const items = Array.isArray(data) ? data : data.suggestions || [];
-        // Extract only names for rendering
-        setSuggestions(items.map((item) => item.name));
+        setSuggestions(items);
       })
       .catch((err) => {
         console.error("Search error:", err);
         setSuggestions([]);
       });
   }, [debouncedAddress]);
+
+  // When a suggestion is clicked, fill the relevant fields
+  const pickSuggestion = (item) => {
+    setAddress1(item.addressLine1 || "");
+    setAddress2(item.addressLine2 || "");
+    setCountry(item.country || "");
+    setStateProv(item.state || "");
+    setCity(item.city || "");
+    setZip(item.postalCode || "");
+    setSuggestions([]);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -134,6 +144,7 @@ export default function Home() {
               className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
             >
               <option value="">Select country</option>
+              {country && <option value={country}>{country}</option>}
             </select>
           </div>
 
@@ -145,6 +156,7 @@ export default function Home() {
               className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
             >
               <option value="">Select state/province</option>
+              {stateProv && <option value={stateProv}>{stateProv}</option>}
             </select>
           </div>
 
@@ -156,10 +168,11 @@ export default function Home() {
               className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
             >
               <option value="">Select city</option>
+              {city && <option value={city}>{city}</option>}
             </select>
           </div>
 
-          {/* Row 2 with autofill */}
+          {/* Row 2 with address-autofill */}
           <div className="relative col-span-2">
             <label className="block text-sm font-medium">Address Line 1*</label>
             <input
@@ -171,16 +184,13 @@ export default function Home() {
             />
             {suggestions.length > 0 && (
               <ul className="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto rounded">
-                {suggestions.map((text, idx) => (
+                {suggestions.map((item, idx) => (
                   <li
                     key={idx}
                     className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => {
-                      setAddress1(text);
-                      setSuggestions([]);
-                    }}
+                    onClick={() => pickSuggestion(item)}
                   >
-                    {text}
+                    {item.name}
                   </li>
                 ))}
               </ul>
@@ -211,9 +221,10 @@ export default function Home() {
             <label className="block text-sm font-medium text-gray-400">Business Owner</label>
             <input
               type="text"
-              value="TotalEnergies Marketing"
+              value="Movem"
               disabled
-              className="mt-1 block w-full bg-gray-100 border border-gray-300 rounded px-2 py-1"
+              className="mt-1 block w-full bg-gray-100 border border-gray-300 rounded px-2
+              py-1"
             />
           </div>
 
@@ -227,7 +238,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 col-span-3">
             <div>
               <label className="block text-sm font-medium">Contact Number</label>
               <div className="flex">
@@ -236,7 +247,7 @@ export default function Home() {
                   onChange={(e) => setPhoneCode(e.target.value)}
                   className="mt-1 border border-gray-300 rounded-l px-2 py-1"
                 >
-                  <option>+855</option>
+                  <option>+63</option>
                 </select>
                 <input
                   type="tel"
@@ -257,19 +268,21 @@ export default function Home() {
                 <option value="">Select payment type</option>
               </select>
             </div>
-          </div>
 
-          {/* Row 3 additional fields */}
-          <div>
-            <label className="block text-sm font-medium">GST IN</label>
-            <input
-              type="text"
-              value={gstIn}
-              onChange={(e) => setGstIn(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
-            />
+            <div>
+              <label className="block text-sm font-medium">GST IN</label>
+              <input
+                type="text"
+                value={gstIn}
+                onChange={(e) => setGstIn(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+              />
+            </div>
           </div>
+        </div>
 
+        {/* Row 3 */}
+        <div className="grid grid-cols-7 gap-4">
           <div>
             <label className="block text-sm font-medium">CA Number</label>
             <input
@@ -281,7 +294,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Toggles and Actions */}
+        {/* Toggles & Actions */}
         <div className="flex items-center space-x-6">
           <div className="flex items-center">
             <input
@@ -295,7 +308,6 @@ export default function Home() {
               Reservable
             </label>
           </div>
-
           <div className="flex items-center">
             <input
               id="dsm"
@@ -308,7 +320,6 @@ export default function Home() {
               DSM
             </label>
           </div>
-
           <div className="ml-auto space-x-2">
             <button type="button" className="px-4 py-2 border border-gray-300 rounded">
               Cancel
