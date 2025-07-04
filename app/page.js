@@ -39,7 +39,11 @@ export default function Home() {
       setSuggestions([]);
       return;
     }
-    fetch(`http://localhost:3001/ocpi/search?key=${encodeURIComponent(debouncedAddress)}`)
+    fetch(
+      `https://elocity-locationsearch-ry8jf.ondigitalocean.app/search?key=${encodeURIComponent(
+        debouncedAddress
+      )}`
+    )
       .then((res) => res.json())
       .then((data) => {
         // Normalize to SuggestionItem[]
